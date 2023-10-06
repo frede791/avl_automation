@@ -148,7 +148,8 @@ def main():
 
         # case "standard_vtol": 
 
-# TODO: Fill in remaining stall and def parameters
+# TODO: Fill in remaining stall and def parameters 
+# SPECIFY STALL PARAMETERS BASED ON AIRCRAFT TYPE (IF PROVIDED)
 
 
     shutil.copy(f'{savedir}advanced_lift_drag_template.sdf',inputs.file_name)
