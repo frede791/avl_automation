@@ -1,0 +1,6 @@
+oper
+x
+n custom_plane
+st test3.txt
+
+quit
