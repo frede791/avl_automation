@@ -73,13 +73,12 @@ def ctrl_surface_coef(file,ctrl_surface_vec,index,direction):
     
 
 
-def main():
-    inputs=parse_args()
+def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area):
 
     #parameters present when using ST in JVL:
     filedir = "/home/fremarkus/avl3.36/Avl/runs/"
     savedir = "/home/fremarkus/Documents/avl_automation/"
-    with open(f'{filedir}plane_stability_output.txt','r+') as stability_file:
+    with open(f'{filedir}custom_vehicle_stability_derivatives.txt','r+') as stability_file:
         original_position = stability_file.tell()
         CLa = get_coef(stability_file,"CLa")
         CYa = get_coef(stability_file,"CYa")
@@ -96,8 +95,13 @@ def main():
         Cenb = get_coef(stability_file,"Cnb")
         stability_file.close()
 
-    with open(f'{filedir}plane_bodyaxis_output.txt') as bodyax_file:
+    with open(f'{filedir}custom_vehicle_body_axis_derivatives.txt') as bodyax_file:
         original_position = bodyax_file.tell()
+        
+        eff = get_coef(bodyax_file,"e")
+
+        bodyax_file.seek(original_position)
+
         CDp = get_coef(bodyax_file,"CXp")
         CYp = get_coef(bodyax_file,"CYp")
         CLp = get_coef(bodyax_file,"CZp")
@@ -124,14 +128,14 @@ def main():
         Cenr = get_coef(bodyax_file,"Cnr")
         bodyax_file.close()
 
-    plane_type = inputs.type
+    plane_type = vehicle_type
     ctrl_surface_mat = []
 
     match plane_type:
 
         case "cessna":
             ctrl_surface_vec = []
-            with open(f'{filedir}bodyaxis_derivatives_test.txt') as bodyax_file:
+            with open(f'{filedir}custom_vehicle_body_axis_derivatives.txt') as bodyax_file:
                 original_position = bodyax_file.tell()
                 for i in range(1,4):
                     ctrl_surface_vec = []
@@ -151,61 +155,98 @@ def main():
 # TODO: Fill in remaining stall and def parameters 
 # SPECIFY STALL PARAMETERS BASED ON AIRCRAFT TYPE (IF PROVIDED)
 
+    file_name = f'{savedir}{file_name}.sdf'
+    shutil.copy(f'{savedir}advanced_lift_drag_template.sdf',file_name)
 
-    shutil.copy(f'{savedir}advanced_lift_drag_template.sdf',inputs.file_name)
+    # Get argument coefficients taken directly from the input file.
+    write_coef(file_name,"AR",AR)
+    write_coef(file_name,"area",area)
+    write_coef(file_name,"mac",mac)
+    write_coef(file_name,"air_density",1.2041) # TODO: Provide custom air density option
+    write_coef(file_name,"forward","1 0 0")
+    write_coef(file_name,"upward","0 0 1")
+    write_coef(file_name,"link_name","base_link")
+    write_coef(file_name,"cp",f'{ref_pt_x} {ref_pt_y} {ref_pt_z}')
+    write_coef(file_name,"num_ctrl_surfaces",num_ctrl_surfaces)
 
-    write_coef(inputs.file_name,"CLa",CLa)
-    write_coef(inputs.file_name,"CYa",CYa)
-    write_coef(inputs.file_name,"Cella",Cella)
-    write_coef(inputs.file_name,"Cema",Cema)
-    write_coef(inputs.file_name,"Cena",Cena)
-    write_coef(inputs.file_name,"CLb",CLb)
-    write_coef(inputs.file_name,"CYb",CYb)
-    write_coef(inputs.file_name,"Cellb",Cellb)
-    write_coef(inputs.file_name,"Cemb",Cemb)
-    write_coef(inputs.file_name,"Cenb",Cenb)
+    write_coef(file_name,"CLa",CLa)
+    write_coef(file_name,"CYa",CYa)
+    write_coef(file_name,"Cella",Cella)
+    write_coef(file_name,"Cema",Cema)
+    write_coef(file_name,"Cena",Cena)
+    write_coef(file_name,"CLb",CLb)
+    write_coef(file_name,"CYb",CYb)
+    write_coef(file_name,"Cellb",Cellb)
+    write_coef(file_name,"Cemb",Cemb)
+    write_coef(file_name,"Cenb",Cenb)
 
-    write_coef(inputs.file_name,"CDp",CDp)
-    write_coef(inputs.file_name,"CYp",CYp)
-    write_coef(inputs.file_name,"CLp",CLp)
-    write_coef(inputs.file_name,"Cellp",Cellp)
-    write_coef(inputs.file_name,"Cemp",Cemp)
-    write_coef(inputs.file_name,"Cenp",Cenp)
-    write_coef(inputs.file_name,"CDq",CDq)
-    write_coef(inputs.file_name,"CYq",CYq)
-    write_coef(inputs.file_name,"CLq",CLq)
-    write_coef(inputs.file_name,"Cellq",Cellq)
-    write_coef(inputs.file_name,"Cemq",Cemq)
-    write_coef(inputs.file_name,"Cenq",Cenq)
-    write_coef(inputs.file_name,"CDr",CDr)
-    write_coef(inputs.file_name,"CYr",CYr)
-    write_coef(inputs.file_name,"CLr",CLr)
-    write_coef(inputs.file_name,"Cellr",Cellr)
-    write_coef(inputs.file_name,"Cemr",Cemr)
-    write_coef(inputs.file_name,"Cenr",Cenr)
+    write_coef(file_name,"CDp",CDp)
+    write_coef(file_name,"CYp",CYp)
+    write_coef(file_name,"CLp",CLp)
+    write_coef(file_name,"Cellp",Cellp)
+    write_coef(file_name,"Cemp",Cemp)
+    write_coef(file_name,"Cenp",Cenp)
+    write_coef(file_name,"CDq",CDq)
+    write_coef(file_name,"CYq",CYq)
+    write_coef(file_name,"CLq",CLq)
+    write_coef(file_name,"Cellq",Cellq)
+    write_coef(file_name,"Cemq",Cemq)
+    write_coef(file_name,"Cenq",Cenq)
+    write_coef(file_name,"CDr",CDr)
+    write_coef(file_name,"CYr",CYr)
+    write_coef(file_name,"CLr",CLr)
+    write_coef(file_name,"Cellr",Cellr)
+    write_coef(file_name,"Cemr",Cemr)
+    write_coef(file_name,"Cenr",Cenr)
 
+    write_coef(file_name,"eff",eff)
+
+    # TODO: Improve this for custom stall values
+    # Note: Currently these stall values are simply taken from advanced_plane presets. 
+
+    write_coef(file_name,"alpha_stall","0.3391428111")
+    write_coef(file_name,"CLa_stall","-3.85")
+    write_coef(file_name,"CDa_stall","-0.9233984055")
+    write_coef(file_name,"Cema_stall","0")
+
+    # TODO: Get this to work for custom frames. 
 
     match plane_type:
         case "cessna":
             # print(ctrl_surface_mat[0])
-            ctrl_surface_coef(inputs.file_name,ctrl_surface_mat[0],0,1)
+            ctrl_surface_coef(file_name,ctrl_surface_mat[0],0,1)
             #Change for right wing aileron by flipping sign
             ctrl_surface_mat[0][3] = -float(ctrl_surface_mat[0][3])
             ctrl_surface_mat[0][5] = -float(ctrl_surface_mat[0][5])
-            ctrl_surface_coef(inputs.file_name,ctrl_surface_mat[0],1,1)
-            ctrl_surface_coef(inputs.file_name,ctrl_surface_mat[1],2,-1)
-            ctrl_surface_coef(inputs.file_name,ctrl_surface_mat[2],3,1)
+            ctrl_surface_coef(file_name,ctrl_surface_mat[0],1,1)
+            ctrl_surface_coef(file_name,ctrl_surface_mat[1],2,-1)
+            ctrl_surface_coef(file_name,ctrl_surface_mat[2],3,1)
             
             
         # case "standard_vtol":
 
 
     # close the sdf file with plugin
-    with open(inputs.file_name,'a') as plugin_file:
+    with open(file_name,'a') as plugin_file:
         plugin_file.write("</plugin>")
         plugin_file.close()
 
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument("file_name")
+    parser.add_argument("vehicle_type")
+    parser.add_argument("AR")
+    parser.add_argument("mac")
+    parser.add_argument("ref_pt_x")
+    parser.add_argument("ref_pt_y")
+    parser.add_argument("ref_pt_z")
+    parser.add_argument("num_ctrl_surfaces")
+    parser.add_argument("area")
+
+    args = parser.parse_args()
+
+    main(args.file_name,args.vehicle_type,args.AR,args.mac,args.ref_pt_x,args.ref_pt_y,
+         args.ref_pt_z,args.num_ctrl_surfaces,args.area)
