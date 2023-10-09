@@ -8,4 +8,7 @@ The tool first asks the user for a range of vehicle specific parameters that are
 
 # Setup
 
-In order to run this program, it is necessary to download AVL and run the setup.sh 
+In order to run this program, it is necessary to download AVL and run the setup.sh
+
+# IMPORTANT POINTS TO NOTE
+A control surface in AVL is always defined from left to right. This means you need to first provide the left edge of a surface and then the right edge. If you do this the opposite way around, a surface will essentially be defined upside down. 
