@@ -9,6 +9,7 @@
 # import argparse
 import webbrowser
 import avl_out_parse
+import os
 
 # parser = argparse.ArgumentParser()
 
@@ -59,8 +60,27 @@ def split_into_three(vector,message):
     while(len(vector)!= 3):
         print("This is not the right number of elements. Try again")
         vector = input(message).split()
+        try:
+            vector[0] = float(vector[0])
+            vector[1] = float(vector[1])
+            vector[2] = float(vector[2])
+        except:
+            print("At least of the coordinates is not a number!")
+            vector = []
+
 
     return float(vector[0]), float(vector[1]), float(vector[2])
+
+
+# This function checks provided inputs and ensures that the correct number of values is inputted by the user.
+def is_one_num(message):
+    prov_input = input(message)
+    while len(prov_input.split()) != 1:
+        print("Incorrect number of values provided!")
+        prov_input = input(message)
+
+    return prov_input
+          
 
 
 def main():    
@@ -105,7 +125,6 @@ def main():
     # - sspace 2. (optional for section)
 
 
-    # Derived parameters, these can be derived from parameters not provided by the user
     # TODO: Find out if elevons are defined
     ctrl_surface_types = ['aileron','elevator','rudder'] 
     # - Reference Chord (Cref) (= area/wing span)
@@ -116,17 +135,19 @@ def main():
     span = 0
     ref_pts =[]
         
-    # TODO: Provide some preworked frames for a Cessna and standard VTOL
+    # TODO: Provide some pre-worked frames for a Cessna and standard VTOL
     match frame_type:
         case "cessna":
             num_ctrl_surfaces = 4
+            # TODO: Finish
         
         case "standard_vtol":
             num_ctrl_surfaces = 2
+            # TODO: Finish
 
         case "custom":
 
-            with open(f'{plane_name}.avl','a') as avl_file:
+            with open(f'{plane_name}.avl','w') as avl_file:
                 avl_file.write(f'{delineation} \n')
                 avl_file.write(f'!{plane_name} input dataset \n')
                 avl_file.write(f'{delineation} \n')
@@ -137,11 +158,10 @@ def main():
                 avl_file.close()
 
             print("First define some model-specific parameters for custom models: ")
-            area = input("Reference area: ")
-            span = input("Wing span: ")
-            ref_pts = input("Reference Point: X Y Z ").split()
+            area = is_one_num("Reference area: ")
+            span = is_one_num("Wing span: ")
+            ref_pts = input("Reference Point (X Y Z): ").split()
             ref_pt_x, ref_pt_y, ref_pt_z = split_into_three(ref_pts,"Reference Point: X Y Z ")
-            # ref_pt_x, ref_pt_y, ref_pt_z = float(ref_pts[0]),float(ref_pts[1]),float(ref_pts[2])
             
             if(span != 0 and area != 0):
                 ref_chord = float(area)/float(span)
@@ -156,35 +176,35 @@ def main():
                 avl_file.close()
 
 
-            num_ctrl_surfaces = input("Number of control surfaces: ")
+            num_ctrl_surfaces = is_one_num("Number of control surfaces: ")
             
             print("\nDefine parameter for EACH control surface \n")
                 
             for i in range(0,int(num_ctrl_surfaces)):
 
                 # Wings always need to be defined from left to right
-                ctrl_surf_name = input(f'Provide a name for {i+1}. control surface: ')
+                ctrl_surf_name = is_one_num(f'Provide a name for {i+1}. control surface: ')
                 print("Valid control surface types are: ",ctrl_surface_types)
                 not_valid_ctrl_surface = True
                 
                 while(not_valid_ctrl_surface):
-                    ctrl_surf_type = input(f'Enter type of {i+1}. control surface: ')
+                    ctrl_surf_type = is_one_num(f'Enter type of {i+1}. control surface: ')
                     if ctrl_surf_type not in ctrl_surface_types:
                         print("Not a valid type of control surface! \n")
                     else:
                         not_valid_ctrl_surface = False
                 
-                nchord = input("Specify number of chordwise horseshoe vortices placed on the surface: ")
-                cspace = input("Specify spacing of chordwise vortices: ")
-                nspanwise = input("Specify number of spanwise horseshoe vortices placed on the surface: ")
-                sspace = input("Specify spacing of spanwise vortex spacing parameter: ")
+                nchord = is_one_num("Specify number of chordwise horseshoe vortices placed on the surface: ")
+                cspace = is_one_num("Specify spacing of chordwise vortices: ")
+                nspanwise = is_one_num("Specify number of spanwise horseshoe vortices placed on the surface: ")
+                sspace = is_one_num("Specify spacing of spanwise vortex spacing parameter: ")
                 
-                angle = input("Specify the angle of incidence across the entire surface.(OPTIONAL): ")
+                if ctrl_surf_type.lower() == 'aileron':
+                    angle = is_one_num("Specify the angle of incidence across the entire surface.(OPTIONAL): ")
 
                 #Translation of control surface, will move the whole surface to specified position
                 trans_vec = input(f'Translation of {i+1}. control surface X Y Z: ').split()
                 tx, ty, tz = split_into_three(trans_vec,f'Translation of {i+1}. control surface X Y Z: ')
-                # tx, ty, tz = float(trans_vec[0]),float(trans_vec[1]),float(trans_vec[2])
 
                 # Write common part of this surface to .avl file
                 with open(f'{plane_name}.avl','a') as avl_file:
@@ -194,14 +214,16 @@ def main():
                     avl_file.write("!Nchordwise     Cspace      Nspanwise       Sspace \n")
                     avl_file.write(f'{nchord}       {cspace}        {nspanwise}     {sspace} \n')
                     
-                    # If we have a rudder, we can duplicate one control surface side to the other
-                    # as they are generally modelled and controlled as one in simulation. 
-                    if ctrl_surf_type.lower() == 'eleavator':
+                    # If we have a rudder, we can duplicate the defined control surface along the y-axis of the model
+                    # as both sides are generally modelled and controlled as one in simulation. 
+                    if ctrl_surf_type.lower() == 'elevator':
                         avl_file.write("\nYDUPLICATE\n")
                         avl_file.write("0.0\n\n")
-                        
-                    avl_file.write("ANGLE \n")
-                    avl_file.write(f'{angle} \n')
+                    
+                    if ctrl_surf_type.lower() == 'aileron':
+                        avl_file.write("ANGLE \n")
+                        avl_file.write(f'{angle} \n')
+
                     avl_file.write("TRANSLATE \n")
                     avl_file.write(f'{tx}    {ty}    {tz} \n')
                     avl_file.close()
@@ -215,7 +237,7 @@ def main():
                     naca_number = '10000'
 
                     while(int(naca_number) > 9999):
-                        naca_number = input("Enter selected NACA number: ")
+                        naca_number = is_one_num("Enter selected NACA number: ")
                         
                         if int(naca_number) > 9999:
                             print("NOTE: AVL only supports 4-digit NACA numbers! Please try again")
@@ -227,20 +249,21 @@ def main():
                 print(f'Define first section of {i+1}. control surface \n')
                 xyz1_vec = input(f'X1 Y1 Z1 for first section of {i+1}. control surface: ').split()
                 x1, y1, z1 = split_into_three(xyz1_vec,f'X1 Y1 Z1 for first section of {i+1}. control surface: ')
-                # x1, y1, z1 = float(xyz1_vec[0]),float(xyz1_vec[1]),float(xyz1_vec[2])
-                chord1 = input(f'Chord length for first section of {i+1}. control surface: ')
-                ainc1 = input(f'Incidence for first section of {i+1}. control surface: ')
-                nspan1 = input(f'Number of spanwise vortices for first section of {i+1}. control surface: ')
-                sspace1 = input(f'Spacing of vortices for first section of {i+1}. control surface: ') 
+
+                chord1 = is_one_num(f'Chord length for first section of {i+1}. control surface: ')
+                ainc1 = is_one_num(f'Incidence for first section of {i+1}. control surface: ')
+                nspan1 = is_one_num(f'Number of spanwise vortices for first section of {i+1}. control surface: ')
+                sspace1 = is_one_num(f'Spacing of vortices for first section of {i+1}. control surface: ') 
+
 
                 print(f'Define second section of {i+1}. control surface \n')
                 xyz2_vec = input(f'X2 Y2 Z2 for second section of {i+1}. control surface: ').split()
                 x2, y2, z2 = split_into_three(xyz2_vec,f'X2 Y2 Z2 for second section of {i+1}. control surface: ')
-                # x2, y2, z2 = float(xyz2_vec[0]),float(xyz2_vec[1]),float(xyz2_vec[2])
-                chord2 = input(f'Chord length for second section of {i+1}. control surface: ')
-                ainc2 = input(f'Incidence for second section of {i+1}. control surface: ')
-                nspan2 = input(f'Number of spanwise vortices for second section of {i+1}. control surface: ')
-                sspace2 = input(f'Spacing of vortices for second section of {i+1}. control surface: ')
+
+                chord2 = is_one_num(f'Chord length for second section of {i+1}. control surface: ')
+                ainc2 = is_one_num(f'Incidence for second section of {i+1}. control surface: ')
+                nspan2 = is_one_num(f'Number of spanwise vortices for second section of {i+1}. control surface: ')
+                sspace2 = is_one_num(f'Spacing of vortices for second section of {i+1}. control surface: ')
 
                 write_section(plane_name,x1,y1,z1,chord1,ainc1,nspan1,sspace1,naca_number,ctrl_surf_type)
                 write_section(plane_name,x2,y2,z2,chord2,ainc2,nspan2,sspace2,naca_number,ctrl_surf_type)
@@ -253,13 +276,10 @@ def main():
     ref_pt_x, ref_pt_y, ref_pt_z = float(ref_pts[0]),float(ref_pts[1]),float(ref_pts[2])
 
 
-
-
     # Call shell script that will pass the generated .avl file to AVL
+    os.system(f'./process.sh {plane_name}')
 
-
-
-    # Call main function of output script
+    # Call main function of avl parse script
     avl_out_parse.main(plane_name,frame_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area)
 
 

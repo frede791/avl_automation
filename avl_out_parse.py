@@ -24,7 +24,7 @@ def get_coef(file,token):
 
     linesplit = []
     for line in file:
-        if token in line:
+        if f' {token} ' in line:
             linesplit = line.split()
             break
 
@@ -77,9 +77,17 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
 
     #parameters present when using ST in JVL:
     filedir = "/home/fremarkus/avl3.36/Avl/runs/"
-    savedir = "/home/fremarkus/Documents/avl_automation/"
+    savedir = "/home/fremarkus/avl_automation/"
     with open(f'{filedir}custom_vehicle_stability_derivatives.txt','r+') as stability_file:
         original_position = stability_file.tell()
+
+        # As plane is modelled at 0 degree AoA, the total coefficients should(?) correspond to the
+        # 0 degree coefficients required by the plugin. 
+        alpha = get_coef(stability_file,"Alpha")
+        Cm0 = get_coef(stability_file,"Cmtot")
+        CL0 = get_coef(stability_file,"CLtot")
+        CD0 = get_coef(stability_file,"CDtot")
+
         CLa = get_coef(stability_file,"CLa")
         CYa = get_coef(stability_file,"CYa")
         Cella = get_coef(stability_file,"Cla")
@@ -133,7 +141,7 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
 
     match plane_type:
 
-        case "cessna":
+        case "custom":
             ctrl_surface_vec = []
             with open(f'{filedir}custom_vehicle_body_axis_derivatives.txt') as bodyax_file:
                 original_position = bodyax_file.tell()
@@ -151,6 +159,7 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
 
 
         # case "standard_vtol": 
+        # case "custom"
 
 # TODO: Fill in remaining stall and def parameters 
 # SPECIFY STALL PARAMETERS BASED ON AIRCRAFT TYPE (IF PROVIDED)
@@ -159,6 +168,10 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
     shutil.copy(f'{savedir}advanced_lift_drag_template.sdf',file_name)
 
     # Get argument coefficients taken directly from the input file.
+    write_coef(file_name,"a0",alpha)
+    write_coef(file_name,"CL0",CL0)
+    write_coef(file_name,"CD0",CD0)
+    write_coef(file_name,"Cem0",Cm0)
     write_coef(file_name,"AR",AR)
     write_coef(file_name,"area",area)
     write_coef(file_name,"mac",mac)
@@ -212,8 +225,7 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
     # TODO: Get this to work for custom frames. 
 
     match plane_type:
-        case "cessna":
-            # print(ctrl_surface_mat[0])
+        case "custom":
             ctrl_surface_coef(file_name,ctrl_surface_mat[0],0,1)
             #Change for right wing aileron by flipping sign
             ctrl_surface_mat[0][3] = -float(ctrl_surface_mat[0][3])
@@ -224,6 +236,8 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
             
             
         # case "standard_vtol":
+        
+        # case "cessna":
 
 
     # close the sdf file with plugin
