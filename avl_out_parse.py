@@ -155,7 +155,6 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
                     ctrl_surface_vec.append(get_coef(bodyax_file,f'Cnd{i}'))
                     bodyax_file.seek(original_position)
                     ctrl_surface_mat.append(ctrl_surface_vec)
-                    print(ctrl_surface_mat)
 
 
         # case "standard_vtol": 
