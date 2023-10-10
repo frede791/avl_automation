@@ -5,6 +5,8 @@
 import argparse
 import shutil
 import fileinput
+import subprocess
+import os
 
 parser = argparse.ArgumentParser()
 
@@ -50,7 +52,7 @@ def write_coef(file, token_str, token):
 def ctrl_surface_coef(file,ctrl_surface_vec,index,direction):
     
     extracted_text = ''
-    with open("./control_surface.sdf",'r') as open_file:
+    with open("./templates/control_surface.sdf",'r') as open_file:
         for line in open_file:
             extracted_text += line
         open_file.close()
@@ -75,8 +77,16 @@ def ctrl_surface_coef(file,ctrl_surface_vec,index,direction):
 
 def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area,ctrl_surface_order):
     #parameters present when using ST in JVL:
-    filedir = "/home/fremarkus/avl3.36/Avl/runs/"
-    savedir = "/home/fremarkus/avl_automation/"
+    result = subprocess.run(['pwd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    if result.returncode == 0:
+        # Save the output in a variable
+        savedir = result.stdout.strip()
+        # print(f"Current working directory is: {current_path}")
+
+    user = os.environ.get('USER')
+    filedir = f'/home/{user}/Avl/runs/'
+
     with open(f'{filedir}custom_vehicle_stability_derivatives.txt','r+') as stability_file:
         original_position = stability_file.tell()
 
@@ -162,7 +172,7 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
 # SPECIFY STALL PARAMETERS BASED ON AIRCRAFT TYPE (IF PROVIDED)
 
     file_name = f'{savedir}{file_name}.sdf'
-    shutil.copy(f'{savedir}advanced_lift_drag_template.sdf',file_name)
+    shutil.copy(f'{savedir}/templates/advanced_lift_drag_template.sdf',file_name)
 
     # Get argument coefficients taken directly from the input file.
     write_coef(file_name,"a0",alpha)

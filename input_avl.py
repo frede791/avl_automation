@@ -10,6 +10,7 @@ import webbrowser
 import avl_out_parse
 import os
 import yaml
+import subprocess
 
 
 
@@ -260,9 +261,16 @@ def main():
     avl_out_parse.main(plane_name,frame_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area,ctrl_surface_order)
 
     # Finally move all generated files to a new directory and show the generated geometry image:
+    result = subprocess.run(['pwd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    if result.returncode == 0:
+        # Save the output in a variable
+        current_path = result.stdout.strip()
+        print(f"Current working directory is: {current_path}")
+
     os.system(f'mkdir ./{plane_name}')
     os.system(f'mv ./{plane_name}.* ./{plane_name}' )
-    os.system(f'evince /home/fremarkus/avl_automation/{plane_name}/{plane_name}.ps')
+    os.system(f'evince {current_path}/{plane_name}/{plane_name}.ps')
 
 if __name__ == '__main__':
     main()

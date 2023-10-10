@@ -1,11 +1,11 @@
 # The idea of this file is to use the generate avl file and feed it to AVL in order to steer the parameter generation.
 #!/bin/bash
 CUSTOM_MODEL=$1
-DIR_PATH='/home/fremarkus/avl_automation'
-cp $DIR_PATH/$CUSTOM_MODEL.avl /home/fremarkus/avl3.36/Avl/runs/
+DIR_PATH=$(pwd)
+cp $DIR_PATH/$CUSTOM_MODEL.avl /home/$USER/Avl/runs/
 
 cd 
-cd avl3.36/Avl/runs
+cd Avl/runs
 
 old_stability_derivatives="custom_vehicle_stability_derivatives.txt"
 old_body_ax_derivatives="custom_vehicle_body_axis_derivatives.txt"
@@ -23,7 +23,7 @@ fi
 echo "\n"
 
 #After completion move the plot to avl_automation directory 
-mv /home/fremarkus/avl3.36/Avl/runs/plot.ps $DIR_PATH/
+mv /home/$USER/Avl/runs/plot.ps $DIR_PATH/
 mv $DIR_PATH/plot.ps $DIR_PATH/$CUSTOM_MODEL.ps
 
 ##CHECK IF IT ALREADY EXISTS AND DECIDE WHAT YOU WANT TO DO 
