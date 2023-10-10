@@ -6,6 +6,19 @@ cp $DIR_PATH/$CUSTOM_MODEL.avl /home/fremarkus/avl3.36/Avl/runs/
 
 cd 
 cd avl3.36/Avl/runs
+
+old_stability_derivatives="custom_vehicle_stability_derivatives.txt"
+old_body_ax_derivatives="custom_vehicle_body_axis_derivatives.txt"
+
+if [ -e "$old_stability_derivatives" ]; then
+    # Delete old stability derivative file
+    rm "$old_stability_derivatives"
+fi
+if [ -e "$old_body_ax_derivatives" ]; then
+    # Delete old body_axis derivative file
+    rm "$old_body_ax_derivatives"
+fi
+
 ../bin/avl $CUSTOM_MODEL.avl < $DIR_PATH/avl_steps.txt
 echo "\n"
 

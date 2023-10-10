@@ -113,6 +113,7 @@ def main():
     delineation = '!***************************************'
     sec_demark = '#--------------------------------------------------'
     num_ctrl_surfaces = 0
+    ctrl_surface_order = []
     area = 0
     span = 0
 
@@ -182,6 +183,10 @@ def main():
                         print("Not a valid type of control surface! \n")
                     else:
                         not_valid_ctrl_surface = False
+
+                # The order of control surfaces becomes important in the output parsing 
+                # to correctly assign derivatives to particular surfaces.
+                ctrl_surface_order.append(ctrl_surf_type)
                 
                 nchord = control_surface["nchord"]
                 cspace = control_surface["cspace"]
@@ -233,7 +238,6 @@ def main():
                 # CRITICAL: ALWAYS DEFINE YOUR SECTION FROM LEFT TO RIGHT
                 for j, section in enumerate(control_surface["sections"]):
 
-                    print(j)
                     print(f'Defining {j}. section of {i+1}. control surface \n')
                     y = section["position"]["Y"]
                     z = section["position"]["Z"]
@@ -253,7 +257,7 @@ def main():
     os.system(f'./process.sh {plane_name}')
 
     # Call main function of avl parse script
-    avl_out_parse.main(plane_name,frame_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area)
+    avl_out_parse.main(plane_name,frame_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area,ctrl_surface_order)
 
     # Finally move all generated files to a new directory and show the generated geometry image:
     os.system(f'mkdir ./{plane_name}')

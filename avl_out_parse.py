@@ -73,8 +73,7 @@ def ctrl_surface_coef(file,ctrl_surface_vec,index,direction):
     
 
 
-def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area):
-
+def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfaces,area,ctrl_surface_order):
     #parameters present when using ST in JVL:
     filedir = "/home/fremarkus/avl3.36/Avl/runs/"
     savedir = "/home/fremarkus/avl_automation/"
@@ -160,7 +159,6 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
         # case "standard_vtol": 
         # case "custom"
 
-# TODO: Fill in remaining stall and def parameters 
 # SPECIFY STALL PARAMETERS BASED ON AIRCRAFT TYPE (IF PROVIDED)
 
     file_name = f'{savedir}{file_name}.sdf'
@@ -221,17 +219,47 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
     write_coef(file_name,"CDa_stall","-0.9233984055")
     write_coef(file_name,"Cema_stall","0")
 
-    # TODO: Get this to work for custom frames. 
+    # TODO: Get this to work for more custom frames. 
+    
+    # Check whether a particular type of control surface has been seen before. If it has,
+    # then the current control surface is the (right) counterpart.
+
+    # ASSUMPTION: There is the assumption that an vehicle will only ever have two of any
+    # particular type of control surface. (left and right). If this is not the case, the negation
+    # below will likely not work correctly. 
+    type_seen = list()
+
+    # Dictionary containing the directions that each type of control surface can move
+    ctrl_direction = {"aileron": 1,"elevator": -1,"rudder": 1}
 
     match plane_type:
+
         case "custom":
-            ctrl_surface_coef(file_name,ctrl_surface_mat[0],0,1)
-            #Change for right wing aileron by flipping sign
-            ctrl_surface_mat[0][3] = -float(ctrl_surface_mat[0][3])
-            ctrl_surface_mat[0][5] = -float(ctrl_surface_mat[0][5])
-            ctrl_surface_coef(file_name,ctrl_surface_mat[0],1,1)
-            ctrl_surface_coef(file_name,ctrl_surface_mat[1],2,-1)
-            ctrl_surface_coef(file_name,ctrl_surface_mat[2],3,1)
+            for i, ctrl_surface in enumerate(ctrl_surface_order):
+
+                # Check whether a particular type of control surface has been seen before. If it has,
+                # then the current control surface is the (right) counterpart. Depending on the exact 
+                # nature of the encountered type you then need to negate the correct parameters.
+                if ctrl_surface in type_seen:
+                    # Work out what the corresponding index for the first encounter of the ctrl surface is.
+                    seen_index = type_seen.index(ctrl_surface)
+
+                    if ctrl_surface == 'aileron':
+                        #Change for right wing aileron by flipping sign
+                        ctrl_surface_mat[seen_index][3] = -float(ctrl_surface_mat[0][3])
+                        ctrl_surface_mat[seen_index][5] = -float(ctrl_surface_mat[0][5])
+
+                    # Split Elevators are assumed to never run differentially. Feel free to add a 
+                    # condition if your plane does require differential elevator action. 
+
+                else:
+                    # If a ctrl surface has not been encountered add it to the type_seen list and 
+                    # set the index to the length of the list - 1 as this corresponds to the newest
+                    # unseen element in ctrl_surface_mat .
+                    type_seen.append(ctrl_surface)
+                    seen_index = len(type_seen) - 1
+            
+                ctrl_surface_coef(file_name,ctrl_surface_mat[seen_index],i,ctrl_direction[ctrl_surface])
             
             
         # case "standard_vtol":
@@ -243,7 +271,6 @@ def main(file_name,vehicle_type,AR,mac,ref_pt_x,ref_pt_y,ref_pt_z,num_ctrl_surfa
     with open(file_name,'a') as plugin_file:
         plugin_file.write("</plugin>")
         plugin_file.close()
-
 
 
 if __name__ == '__main__':
@@ -258,8 +285,9 @@ if __name__ == '__main__':
     parser.add_argument("ref_pt_z")
     parser.add_argument("num_ctrl_surfaces")
     parser.add_argument("area")
+    parser.add_argument("ctrl_surface_order")
 
     args = parser.parse_args()
 
     main(args.file_name,args.vehicle_type,args.AR,args.mac,args.ref_pt_x,args.ref_pt_y,
-         args.ref_pt_z,args.num_ctrl_surfaces,args.area)
+         args.ref_pt_z,args.num_ctrl_surfaces,args.area,args.ctrl_surface_order)
