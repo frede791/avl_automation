@@ -1,11 +1,10 @@
-# The idea of this file is to use the generate avl file and feed it to AVL in order to steer the parameter generation.
 #!/bin/bash
 CUSTOM_MODEL=$1
 DIR_PATH=$(pwd)
-cp $DIR_PATH/$CUSTOM_MODEL.avl /home/$USER/Avl/runs/
 
-cd 
-cd Avl/runs
+cp $DIR_PATH/$CUSTOM_MODEL.avl /home/$USER/Avl/runs/
+cd
+cd /home/$USER/Avl/runs
 
 old_stability_derivatives="custom_vehicle_stability_derivatives.txt"
 old_body_ax_derivatives="custom_vehicle_body_axis_derivatives.txt"
@@ -19,11 +18,10 @@ if [ -e "$old_body_ax_derivatives" ]; then
     rm "$old_body_ax_derivatives"
 fi
 
+#avl_steps.txt can be used to run commands on the AVL commandline.
 ../bin/avl $CUSTOM_MODEL.avl < $DIR_PATH/avl_steps.txt
 echo "\n"
 
-#After completion move the plot to avl_automation directory 
+#After completion move the plot to avl_automation directory
 mv /home/$USER/Avl/runs/plot.ps $DIR_PATH/
 mv $DIR_PATH/plot.ps $DIR_PATH/$CUSTOM_MODEL.ps
-
-##CHECK IF IT ALREADY EXISTS AND DECIDE WHAT YOU WANT TO DO 

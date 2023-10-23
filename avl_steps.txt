@@ -1,6 +1,6 @@
 oper
 x
-n custom_plane 
+n custom_plane
 st custom_vehicle_stability_derivatives.txt
 sb custom_vehicle_body_axis_derivatives.txt
 g
